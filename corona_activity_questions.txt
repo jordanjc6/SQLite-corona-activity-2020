@@ -1,0 +1,64 @@
+Looking at the corona_activity_data on a global scale:
+
+Time range of dataset?
+
+2020-01-21 to 2020-12-28
+
+Total deaths as of 2020-12-28?
+
+1,774,680
+
+SOL'N:
+
+SELECT SUM(PEOPLE_DEATH_COUNT) AS 'Total Global Deaths'
+FROM corona_activity_data
+WHERE REPORT_DATE = '2020-12-28';
+
+Countries with the highest death count? Countries with the least?
+
+SOL'N:
+
+SELECT COUNTRY_SHORT_NAME AS 'Country', SUM(PEOPLE_DEATH_COUNT) AS 'Total Deaths'
+FROM corona_activity_data
+WHERE REPORT_DATE = '2020-12-28'
+GROUP BY COUNTRY_SHORT_NAME
+ORDER BY 2 DESC;
+
+Global positive cases each month? Percent change?
+
+SOL'N:
+
+WITH month AS (
+SELECT CAST(SUBSTR(REPORT_DATE, 6, 7) AS INTEGER) AS 'Month',
+	CAST(SUM(PEOPLE_POSITIVE_CASES_COUNT) AS REAL) AS 'Global_Positive_Cases'
+FROM corona_activity_data
+GROUP BY 1
+), previous_month AS (
+SELECT CAST(SUBSTR(REPORT_DATE, 6, 7) AS INTEGER) + 1 AS 'Month',
+	CAST(SUM(PEOPLE_POSITIVE_CASES_COUNT) AS REAL) AS 'Global_Positive_Cases'
+FROM corona_activity_data
+GROUP BY 1
+)
+SELECT month.Month, month.Global_Positive_Cases,
+	ROUND( (month.Global_Positive_Cases - previous_month.Global_Positive_Cases) / previous_month.Global_Positive_Cases * 100, 2 )
+		AS 'Percent_Change'
+FROM month
+LEFT JOIN previous_month
+ON month.Month = previous_month.Month;
+
+
+
+Looking at the corona_activity_data in Canada:
+
+Stats for each province by month?
+
+SOL'N:
+
+For Ontario...
+
+SELECT SUBSTR(REPORT_DATE, 6, 2) AS 'Month', PROVINCE_STATE_NAME AS 'Province',
+	SUM(PEOPLE_POSITIVE_NEW_CASES_COUNT) AS 'New_Cases', MAX(PEOPLE_POSITIVE_CASES_COUNT) AS 'Total_Cases', 
+	SUM(PEOPLE_DEATH_NEW_COUNT) AS 'New_Deaths', MAX(PEOPLE_DEATH_COUNT) AS 'Total_Deaths'
+FROM corona_activity_data
+WHERE PROVINCE_STATE_NAME = 'Ontario'
+GROUP BY 1;
